@@ -1,6 +1,8 @@
 import time
 from pathlib import Path
 
+from pypdf import PdfReader
+
 from db import init_db, insert_document, get_all_documents
 from embeddings_demo import embed_texts
 
@@ -13,13 +15,35 @@ def chunk_text(text):
     return [p for p in paragraphs if p]
 
 
+def extract_pdf_text_by_page(path):
+    """PDF dosyasından sayfa sayfa metin çıkarır."""
+    reader = PdfReader(path)
+    pages = []
+    for page in reader.pages:
+        text = page.extract_text() or ""
+        pages.append(text)
+    return pages
+
+
+def load_pdf_chunks(path):
+    """Bir PDF dosyasını sayfa sayfa okuyup her sayfayı paragraflara böler."""
+    chunks = []
+    for page_text in extract_pdf_text_by_page(path):
+        chunks.extend(chunk_text(page_text))
+    return chunks
+
+
 def load_chunks():
-    """documents/ altındaki .txt dosyalarını okuyup chunk/kaynak listesi döndürür."""
+    """documents/ altındaki .txt ve .pdf dosyalarını okuyup chunk/kaynak listesi döndürür."""
     chunks = []
     sources = []
     for path in sorted(DOCUMENTS_DIR.glob("*.txt")):
         text = path.read_text(encoding="utf-8")
         for chunk in chunk_text(text):
+            chunks.append(chunk)
+            sources.append(path.name)
+    for path in sorted(DOCUMENTS_DIR.glob("*.pdf")):
+        for chunk in load_pdf_chunks(path):
             chunks.append(chunk)
             sources.append(path.name)
     return chunks, sources

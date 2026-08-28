@@ -6,9 +6,15 @@ from db import get_all_documents
 from embeddings_demo import embed_texts, cosine_similarity
 
 
-def get_top_chunks(query, k=3):
-    """Sorguyu embed edip en benzer k chunk'ı (içerik, skor, kaynak) döndürür."""
+def get_top_chunks(query, k=3, source_filter=None):
+    """Sorguyu embed edip en benzer k chunk'ı (içerik, skor, kaynak) döndürür.
+
+    source_filter verilirse, sadece source_name'i bu değere eşit olan
+    chunk'lar arasında arama yapılır.
+    """
     documents = get_all_documents()
+    if source_filter:
+        documents = [doc for doc in documents if doc["source_name"] == source_filter]
     if not documents:
         return []
 

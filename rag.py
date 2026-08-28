@@ -49,10 +49,10 @@ def _get_chat_client():
     return _chat_client, _chat_model_id
 
 
-def answer_query(question, k=3):
+def answer_query(question, k=3, source_filter=None):
     """İlgili bağlamı bulup Foundry Local LLM'den kaynaklı bir cevap üretir."""
     retrieval_start = time.perf_counter()
-    chunks = get_top_chunks(question, k=k)
+    chunks = get_top_chunks(question, k=k, source_filter=source_filter)
     retrieval_time = time.perf_counter() - retrieval_start
 
     context = "\n\n".join(

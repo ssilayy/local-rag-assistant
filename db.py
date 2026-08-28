@@ -41,6 +41,18 @@ def insert_document(content, embedding, source_name=None, db_path=DB_PATH):
     conn.close()
 
 
+def get_source_names(db_path=DB_PATH):
+    """documents tablosundaki benzersiz source_name değerlerini sıralı olarak döndürür."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.execute(
+        "SELECT DISTINCT source_name FROM documents "
+        "WHERE source_name IS NOT NULL ORDER BY source_name"
+    )
+    names = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return names
+
+
 def get_all_documents(db_path=DB_PATH):
     """Veritabanındaki tüm dökümanları, embedding'leri JSON'dan çözerek döndürür."""
     conn = sqlite3.connect(db_path)
