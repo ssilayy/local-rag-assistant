@@ -1,0 +1,11 @@
+Soru: RAG (Retrieval-Augmented Generation) nedir?
+Cevap: RAG, bir dil modelinin cevap üretirken önce ilgili belgeleri bir veri kaynağından bulup (retrieval), bu belgeleri bağlam olarak kullanarak (generation) daha doğru ve kaynağa dayalı yanıtlar üretmesini sağlayan bir yaklaşımdır.
+
+Soru: RAG neden kullanılır?
+Cevap: Dil modelleri eğitim verisiyle sınırlıdır ve güncel ya da özel (örneğin şirket içi) bilgilere sahip olmayabilir. RAG, bu modelleri harici bir bilgi kaynağıyla besleyerek hem güncelliği hem de doğruluğu artırır.
+
+Soru: RAG sisteminin temel bileşenleri nelerdir?
+Cevap: Bir RAG sistemi genellikle üç ana bileşenden oluşur: belgeleri parçalara ayırıp vektöre çeviren bir embedding aşaması, bu vektörleri saklayan bir veritabanı ve sorguya en yakın parçaları bulup dil modeline ileten bir alma (retrieval) mekanizması.
+
+Soru: RAG offline (yerel) olarak çalışabilir mi?
+Cevap: Evet. Foundry Local gibi araçlarla hem dil modeli hem de embedding modeli tamamen yerel makinede çalıştırılabilir, böylece internet bağlantısı veya bulut servisi gerekmez.

@@ -1,0 +1,5 @@
+foundry-local-sdk
+openai
+aiohttp>=3.10
+numpy
+streamlit

@@ -1,0 +1,7 @@
+Bir veritabanı, verilerin düzenli bir şekilde saklandığı ve erişildiği sistemdir. İlişkisel veritabanları (SQL) verileri tablolar halinde tutar; her tablo satır ve sütunlardan oluşur.
+
+SQLite, sunucu gerektirmeyen, dosya tabanlı hafif bir ilişkisel veritabanı motorudur. Tüm veritabanı tek bir dosyada saklanır, bu da onu küçük ve orta ölçekli uygulamalar ile prototipleme için ideal kılar.
+
+NoSQL veritabanları ise verileri doküman, anahtar-değer, sütun ailesi veya graf gibi farklı modellerde saklar. Şema esnekliği gerektiren veya çok büyük ölçekte yatay olarak büyümesi gereken sistemlerde tercih edilirler.
+
+Vektör veritabanları, metin veya görsellerin sayısal temsillerini (embedding) saklayıp benzerlik araması yapmaya olanak tanır. RAG (Retrieval-Augmented Generation) sistemlerinde ilgili bağlamı bulmak için sıklıkla kullanılırlar.

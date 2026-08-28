@@ -1,0 +1,11 @@
+Soru: Embedding (gömme vektörü) nedir?
+Cevap: Embedding, bir metnin (kelime, cümle veya paragraf) anlamını sayısal bir vektör olarak temsil etmesidir. Anlamca benzer metinler, vektör uzayında birbirine yakın konumlanır.
+
+Soru: Embedding vektörlerinin benzerliği nasıl ölçülür?
+Cevap: En yaygın yöntem cosine similarity'dir; iki vektör arasındaki açının kosinüsünü hesaplayarak 1'e (çok benzer) ile -1'e (çok farklı) arasında bir skor üretir.
+
+Soru: Embedding modeli ile dil modeli aynı şey midir?
+Cevap: Hayır. Dil modeli metin üretir, embedding modeli ise metni sayısal vektöre dönüştürür. RAG sistemlerinde ikisi birlikte, farklı görevler için kullanılır.
+
+Soru: Embedding vektörleri nerede saklanır?
+Cevap: Genellikle bir veritabanında (ör. SQLite, PostgreSQL) veya özel bir vektör veritabanında (ör. FAISS, Chroma, Milvus) saklanır ve arama sırasında sorgu vektörüyle karşılaştırılır.

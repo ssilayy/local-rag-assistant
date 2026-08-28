@@ -1,0 +1,34 @@
+[
+  {
+    "question": "Python'da değişken tanımlarken tür belirtmek gerekir mi?",
+    "expected_behavior": "answerable"
+  },
+  {
+    "question": "RAG sisteminin temel bileşenleri nelerdir?",
+    "expected_behavior": "answerable"
+  },
+  {
+    "question": "Embedding vektörlerinin benzerliği nasıl ölçülür?",
+    "expected_behavior": "answerable"
+  },
+  {
+    "question": "SQLite'ın en önemli özelliği nedir?",
+    "expected_behavior": "answerable"
+  },
+  {
+    "question": "Türkiye'nin başkenti neresidir?",
+    "expected_behavior": "unanswerable"
+  },
+  {
+    "question": "2024 yılında en çok izlenen film hangisiydi?",
+    "expected_behavior": "unanswerable"
+  },
+  {
+    "question": "En hızlı programlama dili hangisidir?",
+    "expected_behavior": "unanswerable"
+  },
+  {
+    "question": "Yapay zeka satranç oynayabilir mi?",
+    "expected_behavior": "unanswerable"
+  }
+]

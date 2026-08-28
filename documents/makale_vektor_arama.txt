@@ -1,0 +1,7 @@
+Vektör araması (vector search), sorgulara en yakın anlamlı sonuçları bulmak için metinleri karşılaştırmak yerine sayısal vektörlerini karşılaştırır. Bu sayede kelimenin birebir eşleşmesi değil, anlamsal benzerliği yakalanır.
+
+En basit yaklaşım, tüm vektörler arasında brute-force (kaba kuvvet) karşılaştırma yapmaktır: sorgu vektörü, veritabanındaki her vektörle karşılaştırılır ve en yüksek benzerlik skoruna sahip olanlar seçilir. Küçük veri kümeleri için bu yeterlidir.
+
+Büyük ölçekli sistemlerde HNSW veya IVF gibi yaklaşık en yakın komşu (Approximate Nearest Neighbor, ANN) algoritmaları kullanılır. Bu algoritmalar, tam doğruluktan biraz ödün vererek arama hızını büyük ölçüde artırır.
+
+Bir RAG uygulamasında vektör araması genellikle şu adımları izler: sorgu embed edilir, veritabanındaki chunk embedding'leriyle karşılaştırılır, en alakalı birkaç chunk seçilir ve bunlar dil modeline bağlam olarak verilir.

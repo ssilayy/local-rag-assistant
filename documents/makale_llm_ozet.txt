@@ -1,0 +1,7 @@
+Büyük dil modelleri (LLM), devasa miktarda metin üzerinde eğitilerek dil örüntülerini öğrenen sinir ağlarıdır. Bir sonraki kelimeyi tahmin etmeye dayalı bu eğitim süreci, modele dilbilgisi, dünya bilgisi ve belirli ölçüde akıl yürütme becerisi kazandırır.
+
+Transformer mimarisi, LLM'lerin temelini oluşturur. Dikkat (attention) mekanizması sayesinde model, bir cümledeki kelimeler arasındaki uzun mesafeli ilişkileri verimli bir şekilde yakalayabilir.
+
+LLM'lerin en büyük sınırlamalarından biri "halüsinasyon"dur: model, eğitim verisinde olmayan veya yanlış bilgileri özgüvenle üretebilir. RAG gibi teknikler, modeli güvenilir kaynaklara dayandırarak bu sorunu azaltmaya çalışır.
+
+Yerel (on-device) LLM çalıştırma, Phi-3.5-mini gibi küçük ama yetenekli modellerin gelişmesiyle giderek daha pratik hale gelmiştir. Bu modeller, gizlilik ve maliyet avantajı sağlayarak bulut bağımlılığını ortadan kaldırır.

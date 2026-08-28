@@ -1,0 +1,7 @@
+Python, okunabilirliği ön planda tutan, yorumlanan (interpreted) bir programlama dilidir. Girinti (indentation) kullanarak kod bloklarını belirler, bu da onu öğrenmesi kolay bir dil haline getirir.
+
+Python'da değişken tanımlamak için tür belirtmeye gerek yoktur; diller buna dinamik tipleme (dynamic typing) der. Örneğin `x = 5` yazdığınızda Python, x'in bir tamsayı (int) olduğunu otomatik olarak anlar.
+
+Listeler, sözlükler (dict), demetler (tuple) ve kümeler (set) Python'daki temel veri yapılarıdır. Liste sırayla tutulan ve değiştirilebilir (mutable) bir koleksiyondur; sözlükler ise anahtar-değer çiftleri saklar.
+
+Fonksiyonlar `def` anahtar kelimesiyle tanımlanır. Python ayrıca lambda ifadeleriyle kısa, isimsiz fonksiyonlar yazmaya da izin verir.
