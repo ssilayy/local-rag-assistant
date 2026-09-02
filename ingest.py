@@ -4,19 +4,19 @@ from pathlib import Path
 from pypdf import PdfReader
 
 from db import init_db, insert_document, get_all_documents
-from embeddings_demo import embed_texts
+from tests.embeddings_demo import embed_texts
 
 DOCUMENTS_DIR = Path(__file__).parent / "documents"
 
 
 def chunk_text(text):
-    """Metni boş satırlara göre paragraf parçalarına böler."""
+    """Split text into paragraph chunks on blank lines."""
     paragraphs = [p.strip() for p in text.split("\n\n")]
     return [p for p in paragraphs if p]
 
 
 def extract_pdf_text_by_page(path):
-    """PDF dosyasından sayfa sayfa metin çıkarır."""
+    """Extract text from a PDF, page by page."""
     reader = PdfReader(path)
     pages = []
     for page in reader.pages:
@@ -26,7 +26,7 @@ def extract_pdf_text_by_page(path):
 
 
 def load_pdf_chunks(path):
-    """Bir PDF dosyasını sayfa sayfa okuyup her sayfayı paragraflara böler."""
+    """Read a PDF page by page and split each page into paragraphs."""
     chunks = []
     for page_text in extract_pdf_text_by_page(path):
         chunks.extend(chunk_text(page_text))
@@ -34,7 +34,7 @@ def load_pdf_chunks(path):
 
 
 def load_chunks():
-    """documents/ altındaki .txt ve .pdf dosyalarını okuyup chunk/kaynak listesi döndürür."""
+    """Read the .txt and .pdf files under documents/ and return their chunks and sources."""
     chunks = []
     sources = []
     for path in sorted(DOCUMENTS_DIR.glob("*.txt")):
@@ -50,13 +50,13 @@ def load_chunks():
 
 
 def main():
-    """Yeni chunk'ları embed edip veritabanına kaydeder; zaten işlenmişleri atlar."""
+    """Embed new chunks and save them to the database; skip ones already processed."""
     init_db()
 
     chunks, sources = load_chunks()
-    print(f"{len(chunks)} chunk bulundu.")
+    print(f"Found {len(chunks)} chunks.")
 
-    # Aynı içerik + kaynak zaten embed edilip kaydedilmişse tekrar embed etme.
+    # Skip chunks that are already embedded and saved for the same source.
     already_embedded = {
         (doc["content"], doc["source_name"]) for doc in get_all_documents()
     }
@@ -68,13 +68,13 @@ def main():
 
     skipped = len(chunks) - len(new_pairs)
     if skipped:
-        print(f"{skipped} chunk zaten embed edilmiş, atlanıyor.")
+        print(f"{skipped} chunks already embedded, skipping.")
 
     if new_pairs:
         new_chunks = [chunk for chunk, _ in new_pairs]
         new_sources = [source_name for _, source_name in new_pairs]
 
-        print(f"{len(new_chunks)} yeni chunk embed ediliyor...")
+        print(f"Embedding {len(new_chunks)} new chunks...")
         embed_start = time.perf_counter()
         embeddings = embed_texts(new_chunks)
         embed_time = time.perf_counter() - embed_start
@@ -83,10 +83,10 @@ def main():
         for chunk, embedding, source_name in zip(new_chunks, embeddings, new_sources):
             insert_document(chunk, embedding.tolist(), source_name=source_name)
     else:
-        print("Yeni chunk yok, embedding hesaplanmadı.")
+        print("No new chunks, nothing to embed.")
 
     total = len(get_all_documents())
-    print(f"Veritabanındaki toplam kayıt sayısı: {total}")
+    print(f"Total records in database: {total}")
 
 
 if __name__ == "__main__":

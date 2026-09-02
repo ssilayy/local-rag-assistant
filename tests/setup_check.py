@@ -8,10 +8,10 @@ def is_foundry_local_sdk_installed() -> bool:
 
 def main():
     if is_foundry_local_sdk_installed():
-        print("foundry-local-sdk kurulu.")
+        print("foundry-local-sdk is installed.")
     else:
-        print("foundry-local-sdk kurulu değil.")
-        print("Kurmak için şu komutu çalıştırın:")
+        print("foundry-local-sdk is not installed.")
+        print("Run this command to install it:")
         print("    pip install foundry-local-sdk")
         sys.exit(1)
 

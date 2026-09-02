@@ -4,11 +4,11 @@ from foundry_local_sdk import Configuration, FoundryLocalManager
 EMBEDDING_MODEL_ALIAS = "qwen3-embedding-0.6b"
 
 SAMPLE_SENTENCES = [
-    "Kedi bahçede güneşleniyor.",
-    "Python, veri bilimi için popüler bir programlama dilidir.",
-    "Yarın İstanbul'da hava yağmurlu olacak.",
-    "Merkez bankası faiz kararını açıkladı.",
-    "Yapay zeka modelleri metinden anlam çıkarabilir.",
+    "The cat is sunbathing in the garden.",
+    "Python is a popular programming language for data science.",
+    "It will rain in Istanbul tomorrow.",
+    "The central bank announced its interest rate decision.",
+    "AI models can extract meaning from text.",
 ]
 
 _embedding_client = None
@@ -26,7 +26,7 @@ def _get_embedding_client():
 
     model = manager.catalog.get_model(EMBEDDING_MODEL_ALIAS)
     model.download(
-        lambda progress: print(f"\rModel indiriliyor: {progress:.2f}%", end="", flush=True)
+        lambda progress: print(f"\rDownloading model: {progress:.2f}%", end="", flush=True)
     )
     print()
     model.load()
@@ -56,15 +56,15 @@ def find_relevant(query, texts):
 
 
 def main():
-    print("Örnek cümleler embed ediliyor...")
+    print("Embedding sample sentences...")
     embeddings = embed_texts(SAMPLE_SENTENCES)
-    print(f"{len(SAMPLE_SENTENCES)} cümle embed edildi. Vektör boyutu: {embeddings.shape[1]}\n")
+    print(f"Embedded {len(SAMPLE_SENTENCES)} sentences. Vector size: {embeddings.shape[1]}\n")
 
-    query = "Yapay zeka doğal dili nasıl anlar?"
-    print(f"Sorgu: {query}")
+    query = "How does AI understand natural language?"
+    print(f"Query: {query}")
 
     best_text, score = find_relevant(query, SAMPLE_SENTENCES)
-    print(f"En alakalı cümle: {best_text}")
+    print(f"Most relevant sentence: {best_text}")
     print(f"Cosine similarity: {score:.4f}")
 
 

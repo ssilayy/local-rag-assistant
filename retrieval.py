@@ -3,14 +3,14 @@ import time
 import numpy as np
 
 from db import get_all_documents
-from embeddings_demo import embed_texts, cosine_similarity
+from tests.embeddings_demo import embed_texts, cosine_similarity
 
 
 def get_top_chunks(query, k=3, source_filter=None):
-    """Sorguyu embed edip en benzer k chunk'ı (içerik, skor, kaynak) döndürür.
+    """Embed the query and return the top k most similar chunks (content, score, source).
 
-    source_filter verilirse, sadece source_name'i bu değere eşit olan
-    chunk'lar arasında arama yapılır.
+    If source_filter is given, only search chunks whose source_name
+    matches it.
     """
     documents = get_all_documents()
     if source_filter:

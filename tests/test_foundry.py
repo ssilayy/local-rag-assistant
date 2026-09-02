@@ -14,11 +14,11 @@ def main():
 
     model = manager.catalog.get_model(MODEL_ALIAS)
     model.download(
-        lambda progress: print(f"\rModel indiriliyor: {progress:.2f}%", end="", flush=True)
+        lambda progress: print(f"\rDownloading model: {progress:.2f}%", end="", flush=True)
     )
     print()
     model.load()
-    print("Model yüklendi.")
+    print("Model loaded.")
 
     manager.start_web_service()
     base_url = f"{manager.urls[0]}/v1"

@@ -6,7 +6,7 @@ DB_PATH = Path(__file__).parent / "documents.db"
 
 
 def init_db(db_path=DB_PATH):
-    """documents tablosunu oluşturur; eski şemaları source_name sütunuyla günceller."""
+    """Create the documents table; adds the source_name column to older schemas."""
     conn = sqlite3.connect(db_path)
     conn.execute(
         """
@@ -19,7 +19,7 @@ def init_db(db_path=DB_PATH):
         """
     )
 
-    # Migration: source_name sütunu olmayan eski tablolara bu sütunu ekle.
+    # Migration: add the source_name column to older tables that don't have it.
     existing_columns = {
         row[1] for row in conn.execute("PRAGMA table_info(documents)")
     }
@@ -31,7 +31,7 @@ def init_db(db_path=DB_PATH):
 
 
 def insert_document(content, embedding, source_name=None, db_path=DB_PATH):
-    """Bir metin parçasını embedding'i ve kaynak adıyla birlikte veritabanına ekler."""
+    """Save a text chunk to the database along with its embedding and source name."""
     conn = sqlite3.connect(db_path)
     conn.execute(
         "INSERT INTO documents (content, embedding, source_name) VALUES (?, ?, ?)",
@@ -42,7 +42,7 @@ def insert_document(content, embedding, source_name=None, db_path=DB_PATH):
 
 
 def get_source_names(db_path=DB_PATH):
-    """documents tablosundaki benzersiz source_name değerlerini sıralı olarak döndürür."""
+    """Return the distinct source_name values from the documents table, sorted."""
     conn = sqlite3.connect(db_path)
     cursor = conn.execute(
         "SELECT DISTINCT source_name FROM documents "
@@ -54,7 +54,7 @@ def get_source_names(db_path=DB_PATH):
 
 
 def get_all_documents(db_path=DB_PATH):
-    """Veritabanındaki tüm dökümanları, embedding'leri JSON'dan çözerek döndürür."""
+    """Return all documents from the database, decoding embeddings from JSON."""
     conn = sqlite3.connect(db_path)
     cursor = conn.execute("SELECT id, content, embedding, source_name FROM documents")
     rows = cursor.fetchall()

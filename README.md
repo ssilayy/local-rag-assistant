@@ -1,133 +1,149 @@
 # Local RAG Assistant
 
-Local RAG Assistant, Foundry Local üzerinde çalışan, tamamen offline bir döküman tabanlı soru-cevap asistanıdır. Kullanıcıların kendi belgelerini yükleyerek bu belgeler üzerinden doğal dilde sorular sorabilmesini sağlar; herhangi bir bulut servisine veya internet bağlantısına ihtiyaç duymadan, verilerin tamamen yerel makinede kalmasını hedefler.
+I built this project during a Summer School program as a way to actually understand how Retrieval-Augmented Generation (RAG) works under the hood, instead of just using an API that does it for me.
 
-Proje, Retrieval-Augmented Generation (RAG) yaklaşımını kullanarak ilgili belge parçalarını bulur ve bunları yerel dil modeline bağlam olarak sunarak daha doğru ve kaynağa dayalı cevaplar üretir. Bu sayede gizlilik gerektiren veya offline çalışması gereken senaryolarda güvenilir bir soru-cevap deneyimi sunmayı amaçlar.
+It's a document Q&A assistant that runs 100% offline, on your own machine, using Foundry Local. You drop your own `.txt` or `.pdf` files into a folder, it chunks and embeds them, and then you can ask questions in plain language and get answers grounded in your documents — no cloud calls, no API keys, nothing leaves your computer.
 
-## Mimari
+## Why offline
 
-Proje iki ayrı akıştan oluşur: belgeleri veritabanına kazandıran **ingest** akışı ve kullanıcı sorularını yanıtlayan **sorgu** akışı.
+I wanted to try building a RAG pipeline where the data genuinely never leaves the machine — no OpenAI calls, no external embedding API. Foundry Local lets you run both the embedding model and the chat model locally, so this felt like a good project to learn the full pipeline end to end: chunking, embedding, similarity search, and prompting an LLM with retrieved context.
+
+## How it works
+
+There are two flows: one for loading documents into the database, and one for answering questions.
 
 ```
-Ingest akışı:
-  documents/*.txt --(chunk_text)--> paragraf parçaları --(embed_texts)--> vektörler --(insert_document)--> SQLite (documents.db)
+Ingest:
+  documents/*.txt --(chunk into paragraphs)--> embed each chunk --> save to SQLite (documents.db)
 
-Sorgu akışı:
-  İstemci (main.py CLI / app.py Streamlit)
+Query:
+  main.py (CLI) or app.py (Streamlit)
         │
         ▼
   rag.py: answer_query(question)
         │
         ▼
-  retrieval.py: get_top_chunks(query, k)
-        │  1) soruyu embed et (embeddings_demo.embed_texts, qwen3-embedding-0.6b)
-        │  2) SQLite'daki tüm chunk embedding'leriyle cosine similarity hesapla
-        │  3) en alakalı k chunk'ı (içerik + skor + kaynak dosya adı) döndür
-        ▼
-  SQLite (documents.db) — documents tablosu: id, content, embedding (JSON), source_name
+  retrieval.py: embed the question, compare against all stored chunk
+  embeddings with cosine similarity, return the top k matches
         │
         ▼
-  rag.py: alınan chunk'ları bağlam (context) olarak system prompt'a ekler
+  rag.py: stuff those chunks into the prompt as context
         │
         ▼
-  Foundry Local LLM (phi-3.5-mini, OpenAI-uyumlu chat completion API)
+  Foundry Local LLM (phi-3.5-mini) generates the answer
         │
         ▼
-  Kaynak belirtilmiş cevap → istemciye döner
+  Answer + source file name returned to the user
 ```
 
-Katmanların sorumlulukları:
+Project layout:
 
-- **`db.py`** — SQLite üzerinde `documents` tablosunu yönetir (`init_db`, `insert_document`, `get_all_documents`). Embedding vektörleri JSON string olarak saklanır.
-- **`embeddings_demo.py`** — Foundry Local'in embedding modelini (`qwen3-embedding-0.6b`) yükler ve `embed_texts(texts)` fonksiyonuyla metinleri vektöre çevirir.
-- **`ingest.py`** — `documents/` klasöründeki `.txt` dosyalarını okur, paragraflara böler, embed eder ve SQLite'a kaydeder. Daha önce embed edilmiş chunk'ları atlayarak gereksiz yeniden hesaplamayı önler.
-- **`retrieval.py`** — Bir sorguyu embed edip veritabanındaki tüm chunk'larla cosine similarity üzerinden en alakalı `k` tanesini bulur (`get_top_chunks`). Embed ve arama sürelerini loglar.
-- **`rag.py`** — Retrieval sonucunu bağlam olarak kullanıp Foundry Local'in chat completion API'si (`phi-3.5-mini`) üzerinden cevap üretir (`answer_query`). Retrieval ve LLM üretim sürelerini loglar.
-- **`main.py`** — Konsoldan sürekli soru alan basit bir CLI arayüzü.
-- **`app.py`** — Streamlit tabanlı minimal web arayüzü.
+```
+local-rag-assistant/
+├── main.py, db.py, ingest.py, retrieval.py, rag.py, app.py   # main app files
+├── documents/                                                 # your .txt / .pdf files go here
+├── documents.db                                                # SQLite database
+└── tests/                                                      # test scripts and helpers
+    ├── embeddings_demo.py   # embed_texts() lives here, used by ingest.py and retrieval.py
+    ├── setup_check.py
+    ├── test_db.py, test_foundry.py, test_retrieval.py, test_runner.py
+    └── test_queries.json
+```
 
-## Kullanılan modeller
+What each file does:
 
-Modeller Foundry Local üzerinden, tamamen yerel makinede çalıştırılır; ilk kullanımda otomatik olarak indirilip önbelleğe alınır.
+- **`db.py`** — manages the `documents` table in SQLite (`init_db`, `insert_document`, `get_all_documents`). Embeddings are stored as JSON strings.
+- **`tests/embeddings_demo.py`** — loads the Foundry Local embedding model (`qwen3-embedding-0.6b`) and exposes `embed_texts(texts)`. It's technically in `tests/`, but `ingest.py` and `retrieval.py` both depend on it directly.
+- **`ingest.py`** — reads the `.txt` files in `documents/`, splits them into paragraphs, embeds them, and saves everything to SQLite. It skips chunks that were already embedded so you're not recomputing everything on every run.
+- **`retrieval.py`** — embeds a query and finds the top `k` most similar chunks in the database using cosine similarity (`get_top_chunks`). Logs timing for embedding and search.
+- **`rag.py`** — takes the retrieved chunks, builds a prompt, and calls the Foundry Local chat API (`phi-3.5-mini`) to generate an answer (`answer_query`). Also logs timing.
+- **`main.py`** — a small CLI loop for asking questions from the terminal.
+- **`app.py`** — a Streamlit web UI for the same thing.
 
-| Amaç | Model | Kullanıldığı yer |
+## Models
+
+Everything runs locally through Foundry Local — models get downloaded and cached automatically the first time you use them.
+
+| Purpose | Model | Used in |
 |---|---|---|
-| Metin üretimi (chat completion) | `phi-3.5-mini` | `rag.py` |
-| Embedding (vektöre çevirme) | `qwen3-embedding-0.6b` | `embeddings_demo.py` |
+| Generating answers | `phi-3.5-mini` | `rag.py` |
+| Embeddings | `qwen3-embedding-0.6b` | `embeddings_demo.py` |
 
-## Kurulum
+## Setup
 
-Ön koşul: Python 3.11 veya üzeri.
+You need Python 3.11 or newer.
 
 ### macOS
 
 ```bash
-git clone <bu-repo>
+git clone <this-repo>
 cd local-rag-assistant
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` içindeki `foundry-local-sdk` paketi, Foundry Local çalışma zamanını (native core) da birlikte kurar; macOS'ta ayrı bir uygulama kurulumuna gerek yoktur.
+`requirements.txt` includes `foundry-local-sdk`, which also installs the Foundry Local runtime — no separate app install needed on macOS.
 
 ### Windows
 
 ```powershell
-git clone <bu-repo>
+git clone <this-repo>
 cd local-rag-assistant
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Windows'ta donanım hızlandırmalı (Windows ML) çalıştırmak isterseniz `requirements.txt`'teki `foundry-local-sdk` satırını `foundry-local-sdk-winml` ile değiştirip yeniden kurun:
+If you want hardware-accelerated inference on Windows (Windows ML), swap the package after installing:
 
 ```powershell
 pip uninstall foundry-local-sdk
 pip install foundry-local-sdk-winml
 ```
 
-Standart `foundry-local-sdk` paketi Windows'ta da (donanım hızlandırma olmadan) sorunsuz çalışır; `-winml` sürümü sadece daha geniş donanım desteği içindir.
+The regular `foundry-local-sdk` package works fine on Windows too, just without the extra acceleration.
 
-## Çalıştırma talimatları
+## Running it
 
-1. **Kurulumu doğrula:**
+1. **Check your setup is working:**
    ```bash
-   python setup_check.py
+   python tests/setup_check.py
    ```
 
-2. **Belgeleri veritabanına işle (ilk çalıştırmada modelleri indirir, biraz sürebilir):**
+2. **Load your documents into the database** (first run downloads the models, so it takes a bit):
    ```bash
    python ingest.py
    ```
-   `documents/` klasörüne kendi `.txt` dosyalarınızı ekleyip komutu tekrar çalıştırarak veritabanını güncelleyebilirsiniz — sadece yeni/değişen chunk'lar embed edilir.
+   Add your own `.txt` files to `documents/` and re-run this whenever you add or change something — it only embeds new/changed chunks.
 
-3. **Konsoldan soru sormak için:**
+3. **Ask questions from the terminal:**
    ```bash
    python main.py
    ```
-   Çıkmak için `exit` yazın.
+   Type `exit` to quit.
 
-4. **Web arayüzünden soru sormak için:**
+4. **Or use the web UI:**
    ```bash
    streamlit run app.py
    ```
-   Açılan sayfada metin kutusuna sorunuzu yazıp "Sor" butonuna tıklayın.
+   Type your question in the box and hit "Ask".
 
-5. **Test/doğrulama betikleri:**
+5. **Test scripts** (in `tests/`):
    ```bash
-   python test_foundry.py      # Chat completion API'sinin temel bağlantı testi
-   python test_db.py           # db.py fonksiyonlarının testi
-   python test_retrieval.py    # get_top_chunks() için örnek sorgular
-   python test_runner.py       # test_queries.json'daki sorularla uçtan uca doğruluk testi
+   python tests/test_foundry.py      # basic connectivity check for the chat API
+   python tests/test_db.py           # tests db.py functions
+   python tests/test_retrieval.py    # sample queries for get_top_chunks()
+   python tests/test_runner.py       # end-to-end accuracy check using test_queries.json
    ```
 
-## Bilinen sınırlamalar
+## What I'd still improve
 
-- **Küçük modelin talimat takibi zayıf:** `phi-3.5-mini` küçük ve hızlı bir model olduğu için "sadece bağlamı kullan, yoksa bilmiyorum de" talimatına her zaman uymuyor; bağlam dışı sorularda zaman zaman halüsinasyon yapıp uydurma kaynak adı üretebiliyor (`test_runner.py` çıktısında gözlemlenmiştir).
-- **Benzerlik eşiği yok:** `get_top_chunks` her zaman en yakın `k` sonucu döndürür; alakasız bir soruda bile düşük skorlu chunk'lar bağlam olarak modele verilir. Bir minimum benzerlik eşiği eklenmesi bu sorunu azaltabilir.
-- **Basit chunking:** Belgeler yalnızca boş satıra göre paragraflara bölünür; çok uzun paragraflar veya örtüşen (overlapping) bağlam pencereleri desteklenmez.
-- **Tek kullanıcı / tek makine:** SQLite dosya tabanlı olduğu için eşzamanlı çoklu kullanıcı erişimi veya yazma kilidi yönetimi için tasarlanmamıştır.
-- **Performans:** CPU üzerinde yerel çalıştırmada bir sorgunun cevaplanması (embedding + retrieval + LLM üretimi) donanıma bağlı olarak 10-25 saniye sürebilir; `rag.py` ve `retrieval.py` bu süreleri konsola loglar.
-- **Deterministik olmayan cevaplar:** `temperature` parametresi ayarlanmadığından aynı soru farklı çalıştırmalarda farklı ifadelerle (hatta farklı doğrulukta) cevaplanabilir.
+Things I noticed while building this that I'd fix with more time:
+
+- **The small model doesn't always follow instructions.** `phi-3.5-mini` is fast but sometimes ignores the "only use the context, say you don't know otherwise" instruction and makes up an answer (and even a fake source name) for out-of-context questions. I saw this happen a few times in `test_runner.py` output.
+- **No similarity threshold.** `get_top_chunks` always returns the top `k` results no matter how irrelevant they are, so even a completely unrelated question gets fed some context. Adding a minimum similarity cutoff would probably help.
+- **Chunking is very basic.** Documents are split on blank lines only — no handling for very long paragraphs or overlapping windows.
+- **Single user, single machine.** SQLite is file-based, so this isn't built for concurrent access.
+- **Not fast.** On CPU, a full query (embedding + retrieval + generation) can take 10-25 seconds depending on your hardware. `rag.py` and `retrieval.py` log the timing so you can see where it goes.
+- **Answers aren't deterministic.** No `temperature` setting, so the same question can come back worded differently (or with different accuracy) across runs.

@@ -8,11 +8,11 @@ from retrieval import get_top_chunks
 CHAT_MODEL_ALIAS = "phi-3.5-mini"
 
 SYSTEM_PROMPT = (
-    "Sen bir soru-cevap asistanısın. Sadece verilen bağlamı kullanarak soruyu cevapla. "
-    "Önce sorunun tam ve açık cevabını yaz. "
-    "Bağlamda cevap yoksa sadece 'Bu bilgi elimde yok' yaz. "
-    "Cevabının en sonuna, yeni bir satırda, kullandığın bilginin kaynağını "
-    "'(Kaynak: dosya_adi.txt)' formatında ekle."
+    "You are a Q&A assistant. Answer the question using only the given context. "
+    "First write a full, clear answer to the question. "
+    "If the context doesn't contain the answer, just say 'I don't have this information'. "
+    "At the very end of your answer, on a new line, add the source you used "
+    "in the format '(Source: file_name.txt)'."
 )
 
 _chat_client = None
@@ -20,7 +20,7 @@ _chat_model_id = None
 
 
 def _get_chat_client():
-    """Foundry Local chat modelini yükleyip OpenAI uyumlu istemciyi önbelleğe alır."""
+    """Load the Foundry Local chat model and cache an OpenAI-compatible client."""
     global _chat_client, _chat_model_id
     if _chat_client is not None:
         return _chat_client, _chat_model_id
@@ -35,7 +35,7 @@ def _get_chat_client():
     model = manager.catalog.get_model(CHAT_MODEL_ALIAS)
     model.download(
         lambda progress: print(
-            f"\rModel indiriliyor: {progress:.2f}%", end="", flush=True
+            f"\rDownloading model: {progress:.2f}%", end="", flush=True
         )
     )
     print()
@@ -50,13 +50,13 @@ def _get_chat_client():
 
 
 def answer_query(question, k=3, source_filter=None):
-    """İlgili bağlamı bulup Foundry Local LLM'den kaynaklı bir cevap üretir."""
+    """Find relevant context and get a sourced answer from the Foundry Local LLM."""
     retrieval_start = time.perf_counter()
     chunks = get_top_chunks(question, k=k, source_filter=source_filter)
     retrieval_time = time.perf_counter() - retrieval_start
 
     context = "\n\n".join(
-        f"(Kaynak: {source_name})\n{content}"
+        f"(Source: {source_name})\n{content}"
         for content, _score, source_name in chunks
     )
 
@@ -66,7 +66,7 @@ def answer_query(question, k=3, source_filter=None):
     response = client.chat.completions.create(
         model=model_id,
         messages=[
-            {"role": "system", "content": f"{SYSTEM_PROMPT}\n\nBağlam:\n{context}"},
+            {"role": "system", "content": f"{SYSTEM_PROMPT}\n\nContext:\n{context}"},
             {"role": "user", "content": question},
         ],
     )
@@ -74,8 +74,8 @@ def answer_query(question, k=3, source_filter=None):
 
     total_time = retrieval_time + generation_time
     print(
-        f"[timing] retrieval (toplam): {retrieval_time:.3f}s, "
-        f"llm üretim: {generation_time:.3f}s, toplam: {total_time:.3f}s"
+        f"[timing] retrieval (total): {retrieval_time:.3f}s, "
+        f"llm generation: {generation_time:.3f}s, total: {total_time:.3f}s"
     )
 
     return response.choices[0].message.content

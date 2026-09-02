@@ -1,11 +1,14 @@
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from rag import answer_query
 
 TEST_QUERIES_PATH = Path(__file__).parent / "test_queries.json"
 
-REFUSAL_PHRASE = "elimde yok"
+REFUSAL_PHRASE = "don't have this information"
 
 
 def classify_answer(answer):
@@ -36,7 +39,7 @@ def main():
             }
         )
 
-    header = f"{'#':<3} {'Soru':<47} {'Beklenen':<14} {'Gerçekleşen':<14} {'Sonuç':<6}"
+    header = f"{'#':<3} {'Question':<47} {'Expected':<14} {'Actual':<14} {'Result':<6}"
     print(header)
     print("-" * len(header))
     for i, r in enumerate(results, start=1):
@@ -46,16 +49,16 @@ def main():
             f"{r['actual']:<14} {result_mark:<6}"
         )
 
-    print("\nDetaylı cevaplar:\n")
+    print("\nDetailed answers:\n")
     for i, r in enumerate(results, start=1):
-        print(f"[{i}] Soru: {r['question']}")
-        print(f"    Beklenen: {r['expected']} | Gerçekleşen: {r['actual']}")
-        print(f"    Cevap: {r['answer']}")
+        print(f"[{i}] Question: {r['question']}")
+        print(f"    Expected: {r['expected']} | Actual: {r['actual']}")
+        print(f"    Answer: {r['answer']}")
         print()
 
     correct = sum(1 for r in results if r["match"])
     total = len(results)
-    print(f"Özet: {correct}/{total} soru beklenen davranışa uydu.")
+    print(f"Summary: {correct}/{total} questions matched the expected behavior.")
 
 
 if __name__ == "__main__":
