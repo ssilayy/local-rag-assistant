@@ -1,6 +1,6 @@
 # Local RAG Assistant
 
-I built this project during a Summer School program as a way to actually understand how Retrieval-Augmented Generation (RAG) works under the hood, instead of just using an API that does it for me.
+I built this project during a Summer program as a way to actually understand how Retrieval-Augmented Generation (RAG) works under the hood, instead of just using an API that does it for me.
 
 It's a document Q&A assistant that runs 100% offline, on your own machine, using Foundry Local. You drop your own `.txt` or `.pdf` files into a folder, it chunks and embeds them, and then you can ask questions in plain language and get answers grounded in your documents — no cloud calls, no API keys, nothing leaves your computer.
 
